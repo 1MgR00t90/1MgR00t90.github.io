@@ -1,0 +1,29 @@
+# Working notes and drafts - never publish
+*.notes
+*.draft
+_drafts/
+
+# Secrets
+.env
+*.env
+!*.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+credentials.json
+secrets.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,7 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+openai==1.59.6
+pydantic==2.10.4
+httpx==0.28.1
+azure-identity==1.19.0
+azure-monitor-query==1.4.0

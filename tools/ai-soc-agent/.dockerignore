@@ -1,0 +1,18 @@
+# Never send secrets into a build context
+.env
+*.env
+!.env.example
+
+# Local-only Python state; the image rebuilds from requirements.txt
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Not needed in the image
+.git/
+.gitignore
+README.md
+.vscode/
+.idea/

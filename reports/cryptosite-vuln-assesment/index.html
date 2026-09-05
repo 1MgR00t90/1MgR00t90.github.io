@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Application Security Assessment — Cryptocurrency Threat-Intelligence Platform</title>
+<style>
+  :root {
+    --ink:        #1a1d21;
+    --ink-soft:   #4a5158;
+    --ink-faint:  #6b737b;
+    --rule:       #d8dde2;
+    --rule-soft:  #e8ecef;
+    --paper:      #ffffff;
+    --panel:      #f6f8fa;
+    --accent:     #14395e;
+    --accent-soft:#e7eef5;
+    --crit:       #8b1a1a;
+    --high:       #b4460f;
+    --med:        #8a6100;
+    --low:        #2c5f7c;
+    --info:       #55606b;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--panel);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 960px;
+    margin: 0 auto;
+    background: var(--paper);
+    padding: 0 72px 96px;
+    border-left: 1px solid var(--rule-soft);
+    border-right: 1px solid var(--rule-soft);
+  }
+
+  /* ---------- Cover ---------- */
+  .classification {
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 9px 16px;
+    margin: 0 -72px;
+  }
+
+  .cover { padding: 72px 0 40px; border-bottom: 3px solid var(--accent); }
+  .cover .eyebrow {
+    font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--ink-faint); font-weight: 700; margin-bottom: 18px;
+  }
+  .cover h1 {
+    font-size: 34px; line-height: 1.22; margin: 0 0 14px;
+    font-weight: 650; letter-spacing: -.015em; color: var(--ink);
+  }
+  .cover .subtitle { font-size: 18px; color: var(--ink-soft); margin: 0 0 32px; }
+
+  /* ---------- Typography ---------- */
+  h2 {
+    font-size: 22px; font-weight: 650; letter-spacing: -.01em;
+    margin: 56px 0 18px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+  }
+  h2 .num { color: var(--ink-faint); font-variant-numeric: tabular-nums; margin-right: 12px; font-weight: 600; }
+  h3 { font-size: 17px; font-weight: 650; margin: 34px 0 12px; }
+  h4 {
+    font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-faint); margin: 26px 0 8px;
+  }
+  p { margin: 0 0 14px; }
+  ul, ol { margin: 0 0 16px; padding-left: 22px; }
+  li { margin-bottom: 7px; }
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid #b9cbdc; }
+  a:hover { border-bottom-color: var(--accent); }
+  strong { font-weight: 650; }
+
+  /* ---------- Tables ---------- */
+  table {
+    width: 100%; border-collapse: collapse; margin: 18px 0 24px;
+    font-size: 14.5px;
+  }
+  th {
+    text-align: left; font-weight: 650; font-size: 11.5px;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint);
+    border-bottom: 2px solid var(--rule); padding: 8px 12px 8px 0; vertical-align: bottom;
+  }
+  td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  tr:last-child td { border-bottom: 1px solid var(--rule); }
+  td:last-child, th:last-child { padding-right: 0; }
+
+  table.meta td { border: none; padding: 5px 0; }
+  table.meta td:first-child {
+    width: 210px; color: var(--ink-faint); font-size: 13px;
+    font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  }
+
+  /* ---------- Severity ---------- */
+  .sev {
+    display: inline-block; font-size: 11px; font-weight: 700;
+    letter-spacing: .09em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 3px; white-space: nowrap;
+    border: 1px solid currentColor;
+  }
+  .sev-crit { color: var(--crit); background: #fbeaea; }
+  .sev-high { color: var(--high); background: #fdf0e6; }
+  .sev-med  { color: var(--med);  background: #fbf4e0; }
+  .sev-low  { color: var(--low);  background: #eaf2f7; }
+  .sev-info { color: var(--info); background: #eff1f3; }
+
+  .status {
+    display: inline-block; font-size: 11px; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px;
+    border-radius: 3px; background: var(--panel); border: 1px solid var(--rule);
+    color: var(--ink-soft); white-space: nowrap;
+  }
+  .status-conf { color: #1d6b3f; border-color: #bfe0cb; background: #edf7f1; }
+  .status-spec { color: #8a6100; border-color: #e6d5a8; background: #fbf4e0; }
+
+  /* ---------- Finding blocks ---------- */
+  .finding { margin-top: 56px; padding-top: 4px; }
+  .finding-head {
+    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+    border-bottom: 2px solid var(--accent); padding-bottom: 12px; margin-bottom: 4px;
+  }
+  .finding-head .fid {
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    color: var(--accent); letter-spacing: .04em;
+  }
+  .finding-head h3 { margin: 0; font-size: 20px; flex: 1 1 320px; }
+
+  .attrs {
+    background: var(--panel); border: 1px solid var(--rule-soft);
+    border-left: 3px solid var(--accent);
+    padding: 16px 20px; margin: 20px 0 24px; font-size: 14px;
+  }
+  .attrs table { margin: 0; font-size: 14px; }
+  .attrs td { border: none; padding: 4px 0; }
+  .attrs td:first-child {
+    width: 190px; color: var(--ink-faint); font-size: 11.5px;
+    font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+    padding-top: 6px;
+  }
+
+  /* ---------- Code ---------- */
+  pre {
+    background: #f7f9fa; border: 1px solid var(--rule-soft);
+    border-radius: 4px; padding: 14px 16px; overflow-x: auto;
+    font-family: var(--mono); font-size: 13.5px; line-height: 1.6;
+    margin: 14px 0 18px; color: #26303a;
+  }
+  code {
+    font-family: var(--mono); font-size: 13.5px;
+    background: var(--accent-soft); color: #16324f;
+    padding: 1px 5px; border-radius: 3px;
+  }
+  pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+  .redact {
+    background: #2a2f34; color: #2a2f34; border-radius: 2px;
+    padding: 0 6px; font-family: var(--mono); font-size: 12.5px;
+    user-select: none;
+  }
+  .cvss-vec {
+    font-family: var(--mono); font-size: 13px; background: none;
+    color: var(--ink-soft); padding: 0; word-break: break-all;
+  }
+
+  /* ---------- Callouts ---------- */
+  .note {
+    border-left: 3px solid var(--rule); background: var(--panel);
+    padding: 14px 20px; margin: 20px 0; font-size: 14.5px; color: var(--ink-soft);
+  }
+  .note strong { color: var(--ink); }
+  .note.warn { border-left-color: var(--high); background: #fdf7f2; }
+  .note.spec { border-left-color: var(--med); background: #fbf7e8; }
+  .note p:last-child { margin-bottom: 0; }
+
+  /* ---------- TOC ---------- */
+  .toc { background: var(--panel); border: 1px solid var(--rule-soft); padding: 22px 28px; margin: 28px 0; }
+  .toc h4 { margin-top: 0; }
+  .toc ol { list-style: none; padding: 0; margin: 0; counter-reset: toc; }
+  .toc li { margin-bottom: 6px; font-size: 14.5px; counter-increment: toc; }
+  .toc li::before {
+    content: counter(toc) "."; color: var(--ink-faint);
+    font-variant-numeric: tabular-nums; display: inline-block;
+    width: 26px; font-weight: 600;
+  }
+  .toc a { border: none; }
+  .toc a:hover { border-bottom: 1px solid var(--accent); }
+
+  footer {
+    margin-top: 72px; padding-top: 22px; border-top: 1px solid var(--rule);
+    font-size: 13px; color: var(--ink-faint);
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 780px) {
+    .page { padding: 0 22px 60px; }
+    .classification { margin: 0 -22px; }
+    .cover h1 { font-size: 26px; }
+    table.meta td:first-child, .attrs td:first-child { width: 140px; }
+    .table-scroll { overflow-x: auto; }
+  }
+
+  /* ---------- Print ---------- */
+  @media print {
+    body { background: #fff; font-size: 11pt; }
+    .page { max-width: none; padding: 0; border: none; }
+    .classification { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    h2 { break-before: page; }
+    h2#sec-1, .cover h1 { break-before: avoid; }
+    .finding, .attrs, pre, table { break-inside: avoid; }
+    a { color: var(--ink); border: none; }
+    .redact { color: #fff; background: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="classification">Confidential — Redacted for Public Release</div>
+
+<!-- ============ COVER ============ -->
+<header class="cover">
+  <div class="eyebrow">Web Application Security Assessment</div>
+  <h1>Cryptocurrency Threat-Intelligence Platform<br>Security Assessment</h1>
+  <p class="subtitle">Access control, rate-limiting and infrastructure-exposure findings in a public-facing web application and API</p>
+
+  <table class="meta">
+    <tr><td>Document reference</td><td>VA-CTIP-2026-002</td></tr>
+    <tr><td>Version</td><td>1.0 (Public redacted release)</td></tr>
+    <tr><td>Assessment type</td><td>Manual black-box web application and API security assessment</td></tr>
+    <tr><td>Target</td><td>Public-facing cryptocurrency threat-intelligence platform (identity redacted)</td></tr>
+    <tr><td>Authorization</td><td>Written authorization obtained from the platform owner prior to testing</td></tr>
+    <tr><td>Assessor</td><td>Independent security researcher</td></tr>
+    <tr><td>Report date</td><td>11 July 2026</td></tr>
+    <tr><td>Classification</td><td>Confidential — all identifying detail removed for publication</td></tr>
+  </table>
+</header>
+
+<div class="note">
+  <p>Testing was authorized in writing by the platform owner. This is a redacted release: identifiers appear as
+  placeholders such as <code>target.example</code> and <code>&lt;ORIGIN-IP&gt;</code>. All testing and evidence
+  collection was performed manually.</p>
+</div>
+
+<!-- ============ TOC ============ -->
+<nav class="toc">
+  <h4>Contents</h4>
+  <ol>
+    <li><a href="#sec-1">Executive Summary</a></li>
+    <li><a href="#sec-2">Scope and Methodology</a></li>
+    <li><a href="#sec-3">Summary of Findings</a></li>
+    <li><a href="#sec-4">Detailed Findings</a></li>
+    <li><a href="#sec-5">Business Impact Assessment</a></li>
+    <li><a href="#sec-6">Remediation Roadmap</a></li>
+    <li><a href="#sec-7">Appendices</a></li>
+  </ol>
+</nav>
+
+<!-- ============ 1. EXEC SUMMARY ============ -->
+<h2 id="sec-1"><span class="num">1</span>Executive Summary</h2>
+
+<p>A manual, black-box security assessment was performed against the public-facing web application and API of a
+cryptocurrency threat-intelligence platform. The platform provides on-chain risk and wallet-intelligence data through
+a tiered subscription model, sits behind a Cloudflare reverse proxy, and exposes a REST API consumed by its web
+front end.</p>
+
+<p>The assessment identified <strong>two High-severity and one Medium-severity issue</strong>. The application was
+generally well-constructed and no trivial injection, authentication or session-management defects were found; the
+findings instead cluster around <strong>authorization enforcement, resource throttling and network-layer
+exposure</strong> — the areas where business logic and infrastructure configuration, rather than input handling,
+determine security posture.</p>
+
+<ul>
+  <li><strong>VA-01 (High, speculative)</strong> — the intelligence API returns detailed, apparently paid-tier data
+  to fully unauthenticated requests, inconsistent with the platform's subscription model. Confirmation of the exact
+  tier boundary requires a paid account that was not available during testing; the core issue (sensitive data
+  returned with no authentication) is confirmed.</li>
+  <li><strong>VA-02 (High, confirmed)</strong> — the password-reset endpoint enforces its rate limit only at the
+  response layer. Every request continues to queue and deliver a reset email even after the endpoint returns
+  <code>RATE_LIMITED</code>, enabling unbounded email flooding of any registered user.</li>
+  <li><strong>VA-03 (Medium, confirmed)</strong> — the origin server IP is discoverable via certificate-transparency
+  logs and accepts direct inbound connections, allowing an attacker to bypass Cloudflare's WAF, rate limiting and
+  bot/DDoS protections entirely by addressing the origin directly.</li>
+</ul>
+
+<p>The unifying theme is that <strong>protective controls exist but are not authoritative</strong>: a subscription
+model that may not be enforced server-side, a rate limit that returns an error without stopping the action, and a
+CDN security layer that can be side-stepped. Each control gives the appearance of protection while a determined
+requester can act around it. Remediation in Section 6 is correspondingly focused on making each control the actual
+enforcement point rather than a cosmetic one.</p>
+
+<div class="note">
+  <p><strong>Overall risk rating: HIGH</strong> (pre-remediation), driven by VA-01 and VA-02. All findings were
+  reported to the platform owner through a coordinated disclosure process. The assessor invites the owner to report
+  any suspected false positives, particularly on VA-01, where a paid-tier comparison would settle the open question.</p>
+</div>
+
+<!-- ============ 2. SCOPE & METHOD ============ -->
+<h2 id="sec-2"><span class="num">2</span>Scope and Methodology</h2>
+
+<h3>2.1 Scope</h3>
+<div class="table-scroll">
+<table>
+  <tr><th>Item</th><th>Detail</th></tr>
+  <tr><td>Target</td><td>Public-facing cryptocurrency threat-intelligence platform (web application and REST API); identity redacted</td></tr>
+  <tr><td>In-scope surfaces</td><td>Public web application, unauthenticated and free-tier API endpoints, origin/network exposure of the production host</td></tr>
+  <tr><td>Test type</td><td>Black-box; unauthenticated and free-tier authenticated perspectives</td></tr>
+  <tr><td>Authorization</td><td>Written authorization from the platform owner prior to engagement</td></tr>
+  <tr><td>Excluded</td><td>Paid/Pro-tier account testing (no account provisioned); denial-of-service testing; source-code review; social engineering; physical security; third-party providers (Cloudflare, hosting, email)</td></tr>
+</table>
+</div>
+
+<h3>2.2 Methodology</h3>
+<p>Testing followed the <strong>OWASP Web Security Testing Guide (WSTG) v4.2</strong> and the <strong>OWASP API
+Security Top 10 (2023)</strong>, and was structured along <strong>PTES</strong> phases: reconnaissance, mapping of
+the application and API surface, manual identification and validation of authorization, rate-limiting and
+infrastructure weaknesses, non-destructive proof-of-concept development, impact analysis and reporting.</p>
+
+<p>Testing was non-destructive. Password-reset flooding was demonstrated at low volume sufficient to prove the
+decoupling of the rate-limit response from the email dispatch, and was not sustained. No account takeover was
+attempted and no third-party infrastructure was tested.</p>
+
+<h4>Tooling</h4>
+<div class="table-scroll">
+<table>
+  <tr><th>Tool</th><th>Purpose</th></tr>
+  <tr><td>Burp Suite Professional</td><td>Request interception, manipulation and response comparison</td></tr>
+  <tr><td>curl</td><td>Direct API interaction and reproduction scripting</td></tr>
+  <tr><td>nmap</td><td>Origin host port and service enumeration</td></tr>
+  <tr><td>Certificate-transparency log search</td><td>Origin discovery via certificate-to-domain association</td></tr>
+</table>
+</div>
+
+<!-- ============ 3. SUMMARY OF FINDINGS ============ -->
+<h2 id="sec-3"><span class="num">3</span>Summary of Findings</h2>
+
+<div class="table-scroll">
+<table>
+  <tr>
+    <th>ID</th><th>Finding</th><th>Severity</th><th>Status</th><th>CVSS v3.1</th><th>CWE</th><th>OWASP</th>
+  </tr>
+  <tr>
+    <td><strong>VA-01</strong></td>
+    <td><a href="#va-01">Broken access control — paid-tier intelligence data returned without authentication</a></td>
+    <td><span class="sev sev-high">High</span></td>
+    <td><span class="status status-spec">Speculative</span></td>
+    <td>7.5</td>
+    <td>CWE-306, CWE-285</td>
+    <td>A01</td>
+  </tr>
+  <tr>
+    <td><strong>VA-02</strong></td>
+    <td><a href="#va-02">Broken rate limiting — reset emails dispatched despite 429 response</a></td>
+    <td><span class="sev sev-high">High</span></td>
+    <td><span class="status status-conf">Confirmed</span></td>
+    <td>7.5</td>
+    <td>CWE-770, CWE-799</td>
+    <td>API4</td>
+  </tr>
+  <tr>
+    <td><strong>VA-03</strong></td>
+    <td><a href="#va-03">Origin IP exposure — Cloudflare protections bypassable</a></td>
+    <td><span class="sev sev-med">Medium</span></td>
+    <td><span class="status status-conf">Confirmed</span></td>
+    <td>6.5</td>
+    <td>CWE-693, CWE-200</td>
+    <td>A05</td>
+  </tr>
+</table>
+</div>
+
+<h4>Severity distribution</h4>
+<div class="table-scroll">
+<table>
+  <tr><th>Critical</th><th>High</th><th>Medium</th><th>Low</th><th>Informational</th></tr>
+  <tr><td>0</td><td>2</td><td>1</td><td>0</td><td>0</td></tr>
+</table>
+</div>
+
+<!-- ============ 4. DETAILED FINDINGS ============ -->
+<h2 id="sec-4"><span class="num">4</span>Detailed Findings</h2>
+
+<!-- ---- VA-01 ---- -->
+<div class="finding" id="va-01">
+  <div class="finding-head">
+    <span class="fid">VA-01</span>
+    <h3>Broken Access Control — Paid-Tier Intelligence Data Returned Without Authentication</h3>
+    <span class="sev sev-high">High</span>
+  </div>
+
+  <div class="attrs">
+    <table>
+      <tr><td>CVSS v3.1</td><td><strong>7.5 (High)</strong><br><span class="cvss-vec">CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N</span></td></tr>
+      <tr><td>Status</td><td><span class="status status-spec">Speculative</span> — tier boundary unconfirmed without a paid account</td></tr>
+      <tr><td>CWE</td><td>CWE-306 (Missing Authentication for Critical Function); CWE-285 (Improper Authorization)</td></tr>
+      <tr><td>OWASP Top 10 2021</td><td>A01:2021 — Broken Access Control</td></tr>
+      <tr><td>OWASP API 2023</td><td>API1 — Broken Object Level Authorization; API5 — Broken Function Level Authorization</td></tr>
+      <tr><td>Affected asset</td><td><code>GET /api/&lt;intel-report&gt;</code> (premium intelligence endpoint; path generalized)</td></tr>
+    </table>
+  </div>
+
+  <div class="note spec">
+    <p><strong>Why this is reported as speculative.</strong> The endpoint returns detailed intelligence data to
+    unauthenticated requests, which is inconsistent with the platform's paid subscription model. Whether this is a
+    genuine access-control bypass or intended behaviour cannot be confirmed without a paid-tier account for direct
+    response comparison, or visibility into server-side tier-enforcement logic. It is reported so the owner can make
+    that determination. The underlying fact — sensitive intelligence returned with no authentication — is confirmed
+    regardless of how the tier boundary is ultimately defined.</p>
+  </div>
+
+  <h4>Description</h4>
+  <p>The premium intelligence endpoint (<code>/api/&lt;intel-report&gt;</code>) returns detailed analysis —
+  wallet analysis, advanced threat signals and funding-source tracing — without requiring an
+  <code>Authorization</code> header. The platform's public feature comparison presents these as paid-tier
+  capabilities, and the authenticated free-tier profile (<code>/api/&lt;user-profile&gt;</code>) reports its
+  premium-feature flag as <code>false</code>, yet the same class of data is served to anonymous callers.</p>
+
+  <h4>Evidence</h4>
+  <p>Endpoint paths and proprietary field names are replaced with placeholders below; the response structure is
+  unchanged.</p>
+  <p>Unauthenticated request:</p>
+  <pre><code>GET /api/&lt;intel-report&gt;?asset=&lt;ASSET-ID&gt; HTTP/1.1
+Host: target.example</code></pre>
+
+  <p>Response (abbreviated; field names generalized, values redacted):</p>
+  <pre><code>{
+  "riskLevel": "RED",
+  "riskScore": "&lt;redacted&gt;",
+  "confidenceScore": "&lt;redacted&gt;",
+
+  // The groups below are advertised as paid-tier capabilities,
+  // yet were returned in full to an UNAUTHENTICATED request.
+  "&lt;premium: wallet-analysis&gt;": {
+    "creatorAddress": "0x&lt;redacted&gt;",
+    "ownerCanModifyState": true,
+    "riskLevel": "HIGH"
+  },
+  "&lt;premium: funding-trace&gt;": {
+    "deployerAddress": "0x&lt;redacted&gt;",
+    "sourceType": "&lt;redacted&gt;"
+  },
+  "&lt;premium: holder-distribution&gt;": {
+    "holderCount": "&lt;redacted&gt;"
+  },
+  "&lt;premium: advanced-threat-signals&gt;": {
+    "liquidity": "safe",
+    "developerActivity": "warning",
+    "treasuryActivity": "warning"
+  }
+}</code></pre>
+
+  <p>Authenticated free-tier profile, for comparison:</p>
+  <pre><code>{ "tier": "free", "features": { "&lt;premium-feature&gt;": false, "unlimitedScans": false } }</code></pre>
+
+  <h4>Reproduction</h4>
+  <ol>
+    <li>Issue an unauthenticated request to the endpoint:
+      <pre><code>curl -s "https://target.example/api/&lt;intel-report&gt;?asset=&lt;ASSET-ID&gt;"</code></pre>
+    </li>
+    <li>Observe a full intelligence response is returned with no <code>Authorization</code> header.</li>
+    <li>Compare with the authenticated free-tier profile, which reports its premium-feature flag as
+    <code>false</code>:
+      <pre><code>curl -s "https://target.example/api/&lt;user-profile&gt;" -H "Authorization: Bearer &lt;free_tier_token&gt;"</code></pre>
+    </li>
+    <li>Note the anonymous response contains the premium groups (wallet analysis, advanced threat signals and
+    funding tracing) that the free tier is not entitled to.</li>
+  </ol>
+
+  <h4>Data exposed without authentication</h4>
+  <div class="note spec">
+    <p><strong>Limitation.</strong> No paid-tier account was available. The fields below were identified as
+    paid/elite-tier capabilities from the platform's public marketing and feature-comparison pages; it could not be
+    independently confirmed that the unauthenticated response exactly matches a paid subscriber's. The core issue —
+    data returned with no authentication — is confirmed regardless.</p>
+  </div>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Capability (paid-tier)</th><th>Description</th><th>Returned unauthenticated?</th></tr>
+    <tr><td>Advanced threat signals</td><td>Developer-activity, treasury-activity and liquidity-lock detection</td><td>Yes</td></tr>
+    <tr><td>Wallet analysis</td><td>Creator/owner wallet analysis and risk scoring</td><td>Yes</td></tr>
+    <tr><td>Funding attribution</td><td>Deployer funding-source tracing</td><td>Yes</td></tr>
+    <tr><td>Holder distribution</td><td>Token holder count and distribution</td><td>Yes</td></tr>
+    <tr><td>Full risk analysis</td><td>Complete risk scoring and indicators</td><td>Yes</td></tr>
+  </table>
+  </div>
+
+  <h4>Business impact</h4>
+  <ul>
+    <li><strong>Revenue leakage.</strong> If the exposed fields are genuinely paid-tier, the entire subscription
+    model can be bypassed — anyone obtains paid intelligence for free.</li>
+    <li><strong>Intellectual-property exposure.</strong> Proprietary scoring output is accessible to competitors and
+    scrapers at scale.</li>
+    <li><strong>Unbounded harvesting.</strong> With no authentication there is no per-user attribution or throttling,
+    permitting bulk extraction of the platform's core data product.</li>
+  </ul>
+
+  <h4>Remediation</h4>
+  <p>See Section 6. In summary: require authentication on the intelligence endpoint, enforce subscription tier
+  server-side (never rely on the front end to gate fields), and apply per-user API rate limiting.</p>
+</div>
+
+<!-- ---- VA-02 ---- -->
+<div class="finding" id="va-02">
+  <div class="finding-head">
+    <span class="fid">VA-02</span>
+    <h3>Broken Rate Limiting on Password Reset — Emails Dispatched Despite 429</h3>
+    <span class="sev sev-high">High</span>
+  </div>
+
+  <div class="attrs">
+    <table>
+      <tr><td>CVSS v3.1</td><td><strong>7.5 (High)</strong><br><span class="cvss-vec">CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H</span></td></tr>
+      <tr><td>Status</td><td><span class="status status-conf">Confirmed &amp; validated</span></td></tr>
+      <tr><td>CWE</td><td>CWE-770 (Allocation of Resources Without Limits or Throttling); CWE-799 (Improper Control of Interaction Frequency)</td></tr>
+      <tr><td>OWASP Top 10 2021</td><td>A04:2021 — Insecure Design</td></tr>
+      <tr><td>OWASP API 2023</td><td>API4 — Unrestricted Resource Consumption</td></tr>
+      <tr><td>Affected asset</td><td><code>POST /api/&lt;password-reset&gt;</code> (path generalized)</td></tr>
+    </table>
+  </div>
+
+  <h4>Description</h4>
+  <p>The password-reset endpoint has rate-limiting logic: after repeated requests it returns a
+  <code>RATE_LIMITED</code> error with <code>retryAfterSeconds: 300</code>. However, the rate-limit check does not
+  block the underlying action. Every request — including those returning <code>RATE_LIMITED</code> — still queues and
+  delivers a reset email to the target address. The error response and the email dispatch are decoupled: the limit is
+  enforced only at the response layer while the job queue continues to accept and process requests. The rate limit is
+  therefore <strong>cosmetic</strong>.</p>
+
+  <h4>Evidence</h4>
+  <p>Response after the threshold is crossed:</p>
+  <pre><code>{ "error": "Rate limit exceeded", "code": "RATE_LIMITED", "retryAfterSeconds": 300 }</code></pre>
+  <ul>
+    <li>Every request, including those returning <code>RATE_LIMITED</code>, triggered a reset email to the target inbox.</li>
+    <li>No suppression of queue insertion occurs when the limit is breached.</li>
+  </ul>
+
+  <h4>Reproduction</h4>
+  <ol>
+    <li>Establish a baseline with a single reset request:
+      <pre><code>curl -s -X POST https://target.example/api/&lt;password-reset&gt; \
+  -H "Content-Type: application/json" \
+  -d '{"email": "target@example.com"}'</code></pre>
+    </li>
+    <li>Send repeated requests in quick succession:
+      <pre><code>for i in $(seq 1 20); do
+  curl -s -X POST https://target.example/api/&lt;password-reset&gt; \
+    -H "Content-Type: application/json" \
+    -d '{"email": "target@example.com"}'
+  echo
+done</code></pre>
+    </li>
+    <li>Observe that once the threshold is crossed the response body reports <code>RATE_LIMITED</code>, yet reset
+    emails continue to arrive in the target inbox for every request sent.</li>
+  </ol>
+
+  <h4>Root cause</h4>
+  <p>The rate-limit check occurs after the email job is enqueued, or the queue insertion executes before the
+  rate-limit result is acted upon. The validation and the side-effect are not transactionally coupled.</p>
+
+  <h4>Business impact</h4>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Impact</th><th>Description</th></tr>
+    <tr><td>False sense of security</td><td>Rate limiting appears to protect the endpoint while providing no actual protection</td></tr>
+    <tr><td>Direct financial cost</td><td>The transactional email provider bills per message; a sustained attack drives real cost</td></tr>
+    <tr><td>Inbox flooding / harassment</td><td>Any registered user can be flooded with reset emails on demand</td></tr>
+    <tr><td>Sender-reputation damage</td><td>High-volume dispatch degrades deliverability for legitimate mail</td></tr>
+    <tr><td>Operational disruption</td><td>Requires manual queue flushing to stop cost accrual and delivery</td></tr>
+  </table>
+  </div>
+
+  <h4>Remediation</h4>
+  <p>See Section 6. In summary: enforce the limit before enqueuing, couple the error response to skipping the action,
+  deduplicate pending reset jobs per address, and add a challenge (CAPTCHA) plus a queue-depth circuit breaker.</p>
+</div>
+
+<!-- ---- VA-03 ---- -->
+<div class="finding" id="va-03">
+  <div class="finding-head">
+    <span class="fid">VA-03</span>
+    <h3>Origin IP Exposure — Cloudflare Protections Bypassable</h3>
+    <span class="sev sev-med">Medium</span>
+  </div>
+
+  <div class="attrs">
+    <table>
+      <tr><td>CVSS v3.1</td><td><strong>6.5 (Medium)</strong><br><span class="cvss-vec">CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L</span></td></tr>
+      <tr><td>Status</td><td><span class="status status-conf">Confirmed &amp; validated</span></td></tr>
+      <tr><td>CWE</td><td>CWE-693 (Protection Mechanism Failure); CWE-200 (Exposure of Sensitive Information)</td></tr>
+      <tr><td>OWASP Top 10 2021</td><td>A05:2021 — Security Misconfiguration</td></tr>
+      <tr><td>Affected asset</td><td>Production origin host (IP redacted)</td></tr>
+    </table>
+  </div>
+
+  <h4>Description</h4>
+  <p>The origin server's IP address is publicly discoverable because the TLS certificate served directly on the
+  origin is indexed in certificate-transparency logs and associated with the target domain. The origin also accepts
+  direct inbound connections from any source IP rather than restricting traffic to Cloudflare's published ranges. An
+  attacker can therefore address the origin directly with a <code>Host: target.example</code> header, bypassing
+  Cloudflare's WAF, edge rate limiting, bot-management controls and Cloudflare-provided DDoS protection for any
+  traffic sent directly to the origin. Network-layer protections offered by the hosting provider, if any, are
+  outside the scope of this assessment and may still apply.</p>
+
+  <div class="note">
+    <p><strong>Severity context.</strong> Rated Medium: the exposed origin was observed to be a reverse-proxy tier
+    (nginx) hosted on a public cloud VPS rather than the core application server, which limits direct exploitability.
+    The finding is nonetheless confirmed and defeats the CDN security layer the platform relies on.</p>
+    <p><strong>Scope justification.</strong> Scored <code>S:U</code>. Although the attack circumvents Cloudflare,
+    the vulnerable component (the origin's network exposure) and the impacted component (the same origin and its
+    application) fall under one security authority — the platform owner controls both the origin firewall and the
+    CDN configuration. <code>S:C</code> is reserved for impact crossing into a different security authority, which
+    bypassing one's own edge control does not satisfy.</p>
+  </div>
+
+  <h4>Evidence</h4>
+  <p>Port and service enumeration of the origin (host identifiers redacted):</p>
+  <pre><code>Nmap scan report for &lt;ORIGIN-IP&gt;
+Host is up.
+
+PORT    STATE SERVICE  VERSION
+22/tcp  open  ssh      OpenSSH 8.9p1 Ubuntu (protocol 2.0)
+| ssh-hostkey: [REDACTED]
+80/tcp  open  http     nginx 1.18.0 (Ubuntu)
+|_http-title: Welcome to nginx!
+443/tcp open  ssl/http nginx 1.18.0 (Ubuntu)
+| ssl-cert: Subject: commonName=target.example
+| Subject Alternative Name: DNS:target.example
+| Not valid before: [REDACTED]
+|_Not valid after:  [REDACTED]</code></pre>
+
+  <p>The origin certificate binds directly to the target domain, confirming the host. Ports 80 and 443 accept
+  connections from any source, and the application responds normally to direct requests carrying the domain
+  <code>Host</code> header.</p>
+
+  <h4>Reproduction</h4>
+  <ol>
+    <li>Confirm the origin responds directly, bypassing Cloudflare, by setting the <code>Host</code> header to the domain:
+      <pre><code>curl -sk -H "Host: target.example" \
+  "https://&lt;ORIGIN-IP&gt;/api/&lt;intel-report&gt;?asset=&lt;ASSET-ID&gt;"</code></pre>
+    </li>
+    <li>Observe a normal response identical to one routed through Cloudflare.</li>
+    <li>Verify no Cloudflare headers (<code>CF-RAY</code>, <code>CF-Cache-Status</code>) are present in the direct response:
+      <pre><code>curl -skI -H "Host: target.example" "https://&lt;ORIGIN-IP&gt;/" | grep -i "cf-"</code></pre>
+    </li>
+    <li>Confirm SSH (port 22) is reachable from an arbitrary source IP.</li>
+  </ol>
+
+  <h4>Business impact</h4>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Impact</th><th>Description</th></tr>
+    <tr><td>WAF bypass</td><td>All Cloudflare WAF rules are ineffective against direct origin requests</td></tr>
+    <tr><td>Rate-limit bypass</td><td>CDN-level rate limiting is circumvented entirely (compounding VA-01 and VA-02)</td></tr>
+    <tr><td>DDoS exposure</td><td>The origin is directly reachable, so Cloudflare's volumetric protections do not apply to that traffic</td></tr>
+    <tr><td>Bot-detection bypass</td><td>Cloudflare bot scoring and challenges do not apply to direct origin traffic</td></tr>
+    <tr><td>SSH exposure</td><td>Port 22 is reachable from the internet with no apparent source restriction</td></tr>
+  </table>
+  </div>
+
+  <div class="note warn">
+    <p><strong>Chaining note.</strong> VA-03 amplifies the other findings: any CDN-level control the owner might add
+    to compensate for VA-01 or VA-02 (WAF rules, edge rate limiting, bot challenges) can be side-stepped while the
+    origin remains directly reachable. VA-03 should therefore be remediated alongside, not after, the application-layer
+    fixes.</p>
+  </div>
+
+  <h4>Remediation</h4>
+  <p>See Section 6. In summary: restrict origin inbound traffic to Cloudflare ranges, lock down SSH, replace the
+  public origin certificate with a Cloudflare Origin CA certificate, and enable Authenticated Origin Pulls.</p>
+</div>
+
+<!-- ============ 5. BUSINESS IMPACT ============ -->
+<h2 id="sec-5"><span class="num">5</span>Business Impact Assessment</h2>
+
+<p>The findings map onto three distinct business risks — revenue, cost and resilience — which is what elevates them
+above their individual technical severity for a commercial data platform.</p>
+
+<div class="table-scroll">
+<table>
+  <tr><th>Business risk</th><th>Driven by</th><th>Consequence</th><th>Exposure</th></tr>
+  <tr>
+    <td>Revenue and IP protection</td>
+    <td>VA-01</td>
+    <td>Paid-tier intelligence and proprietary scoring obtainable free and at scale, undermining the subscription model and competitive position</td>
+    <td><span class="sev sev-high">High</span></td>
+  </tr>
+  <tr>
+    <td>Direct operating cost</td>
+    <td>VA-02</td>
+    <td>Attacker-controlled, unbounded transactional email dispatch billed to the platform, with manual intervention required to stop it</td>
+    <td><span class="sev sev-high">High</span></td>
+  </tr>
+  <tr>
+    <td>User trust and abuse</td>
+    <td>VA-02</td>
+    <td>Any registered user can be weaponized as a flooding target; harassment vector and support burden</td>
+    <td><span class="sev sev-med">Medium</span></td>
+  </tr>
+  <tr>
+    <td>Platform resilience</td>
+    <td>VA-03</td>
+    <td>The CDN protection layer can be bypassed, exposing the origin to volumetric attack and neutralizing compensating edge controls</td>
+    <td><span class="sev sev-med">Medium</span></td>
+  </tr>
+  <tr>
+    <td>Sender / brand reputation</td>
+    <td>VA-02</td>
+    <td>High-volume dispatch degrades email deliverability for legitimate users</td>
+    <td><span class="sev sev-med">Medium</span></td>
+  </tr>
+</table>
+</div>
+
+<p>The findings also interact. VA-03 removes the edge as a place to compensate for VA-01 and VA-02, and VA-01's lack
+of authentication removes per-user attribution that would otherwise make VA-02-style abuse traceable. The
+recommended sequencing in Section 6 accounts for this.</p>
+
+<!-- ============ 6. REMEDIATION ============ -->
+<h2 id="sec-6"><span class="num">6</span>Remediation Roadmap</h2>
+
+<div class="table-scroll">
+<table>
+  <tr><th>Priority</th><th>Action</th><th>Addresses</th><th>Effort</th><th>Target</th></tr>
+  <tr>
+    <td><span class="sev sev-crit">P1</span></td>
+    <td>Require authentication on the premium intelligence endpoint and enforce subscription tier server-side</td>
+    <td>VA-01</td><td>Medium</td><td>Immediate</td>
+  </tr>
+  <tr>
+    <td><span class="sev sev-crit">P1</span></td>
+    <td>Enforce the reset rate limit before enqueuing; couple the error response to skipping the email dispatch</td>
+    <td>VA-02</td><td>Low</td><td>Immediate</td>
+  </tr>
+  <tr>
+    <td><span class="sev sev-high">P2</span></td>
+    <td>Restrict origin inbound traffic to Cloudflare IP ranges and lock down SSH</td>
+    <td>VA-03</td><td>Low</td><td>7 days</td>
+  </tr>
+  <tr>
+    <td><span class="sev sev-high">P2</span></td>
+    <td>Deduplicate pending reset jobs per address; add CAPTCHA after the first attempt</td>
+    <td>VA-02</td><td>Medium</td><td>14 days</td>
+  </tr>
+  <tr>
+    <td><span class="sev sev-med">P3</span></td>
+    <td>Rotate to a Cloudflare Origin CA certificate; enable Authenticated Origin Pulls</td>
+    <td>VA-03</td><td>Low</td><td>30 days</td>
+  </tr>
+  <tr>
+    <td><span class="sev sev-med">P3</span></td>
+    <td>Apply per-user/session API rate limiting and a reset-queue circuit breaker</td>
+    <td>VA-01, VA-02</td><td>Medium</td><td>30 days</td>
+  </tr>
+</table>
+</div>
+
+<h3>6.1 Access control (VA-01)</h3>
+<ul>
+  <li><strong>Authenticate first.</strong> Reject unauthenticated requests to the premium intelligence endpoint
+  with <code>401</code> in middleware, before any data is fetched.</li>
+  <li><strong>Enforce tier server-side.</strong> After authenticating, resolve the caller's active subscription and
+  filter the response to the fields that tier is entitled to. Never rely on the front end to gate premium fields —
+  front-end classification of a response as "deep" tier is not an access control.</li>
+  <li><strong>Default deny.</strong> Free and unauthenticated requests should receive only basic risk indicators;
+  the premium groups (wallet analysis, funding tracing, liquidity analysis and advanced threat detection) should
+  require paid authorization.</li>
+</ul>
+
+<h3>6.2 Rate limiting (VA-02)</h3>
+<ul>
+  <li><strong>Check before acting.</strong> Validate and enforce the limit early in the request lifecycle, before any
+  job is enqueued; if exceeded, return the error and exit without side effects. The response and the action must be
+  coupled — returning <code>RATE_LIMITED</code> while still processing is a logic error, not a rate limit.</li>
+  <li><strong>Deduplicate at the queue.</strong> Before enqueuing a reset job, skip insertion if a pending job
+  already exists for that address.</li>
+  <li><strong>Add friction.</strong> Require a CAPTCHA on the second and subsequent attempts within a session.</li>
+  <li><strong>Circuit breaker.</strong> If reset-queue depth exceeds a threshold (e.g. 500 pending jobs), halt further
+  enqueuing and raise an operations alert.</li>
+</ul>
+
+<h3>6.3 Origin exposure (VA-03)</h3>
+<ul>
+  <li><strong>Firewall the origin.</strong> Configure the host firewall to accept ports 80/443 only from
+  <a href="https://www.cloudflare.com/ips/">Cloudflare's published IP ranges</a>.</li>
+  <li><strong>Lock down SSH.</strong> Restrict port 22 to known management IPs; consider a non-standard port or
+  VPN-gated access.</li>
+  <li><strong>Break the certificate link.</strong> Use a Cloudflare Origin CA certificate instead of a public
+  certificate bound to the domain, so the origin cannot be fingerprinted via certificate-transparency logs.</li>
+  <li><strong>Authenticated Origin Pulls.</strong> Require a Cloudflare client certificate at the origin so only
+  proxied requests are accepted.</li>
+</ul>
+
+<!-- ============ 7. APPENDICES ============ -->
+<h2 id="sec-7"><span class="num">7</span>Appendices</h2>
+
+<h3>Appendix A — Severity classification</h3>
+<div class="table-scroll">
+<table>
+  <tr><th>Rating</th><th>CVSS v3.1</th><th>Expected response</th></tr>
+  <tr><td><span class="sev sev-crit">Critical</span></td><td>9.0 – 10.0</td><td>Immediate remediation; consider emergency change process</td></tr>
+  <tr><td><span class="sev sev-high">High</span></td><td>7.0 – 8.9</td><td>Remediate within the current sprint or change window</td></tr>
+  <tr><td><span class="sev sev-med">Medium</span></td><td>4.0 – 6.9</td><td>Remediate within an agreed and tracked timeframe</td></tr>
+  <tr><td><span class="sev sev-low">Low</span></td><td>0.1 – 3.9</td><td>Remediate as part of routine maintenance</td></tr>
+  <tr><td><span class="sev sev-info">Info</span></td><td>—</td><td>No direct risk; recorded for awareness</td></tr>
+</table>
+</div>
+<p>Scores are CVSS v3.1 Base scores calculated with the FIRST calculator; environmental metrics were not applied and
+should be adjusted by the owner for the deployment context. VA-02 is scored on availability impact
+(<code>A:H</code>) reflecting the resource-exhaustion and cost nature of the flaw rather than data compromise.</p>
+
+<h3>Appendix B — Status definitions</h3>
+<div class="table-scroll">
+<table>
+  <tr><th>Status</th><th>Meaning</th></tr>
+  <tr><td><span class="status status-conf">Confirmed</span></td><td>Reproduced and validated by the assessor with direct evidence</td></tr>
+  <tr><td><span class="status status-spec">Speculative</span></td><td>Strong indicators observed, but full confirmation is blocked by a scope or access limitation (stated in the finding). Reported for owner determination.</td></tr>
+</table>
+</div>
+
+<h3>Appendix C — Standards references</h3>
+<ul>
+  <li>OWASP Top 10:2021 —
+    <a href="https://owasp.org/Top10/A01_2021-Broken_Access_Control/">A01 Broken Access Control</a>,
+    <a href="https://owasp.org/Top10/A04_2021-Insecure_Design/">A04 Insecure Design</a>,
+    <a href="https://owasp.org/Top10/A05_2021-Security_Misconfiguration/">A05 Security Misconfiguration</a></li>
+  <li><a href="https://owasp.org/API-Security/editions/2023/en/0x11-t10/">OWASP API Security Top 10 (2023)</a> — API1, API4, API5</li>
+  <li><a href="https://owasp.org/www-project-web-security-testing-guide/">OWASP Web Security Testing Guide v4.2</a></li>
+  <li><a href="https://cwe.mitre.org/data/definitions/306.html">CWE-306</a>,
+      <a href="https://cwe.mitre.org/data/definitions/285.html">CWE-285</a>,
+      <a href="https://cwe.mitre.org/data/definitions/770.html">CWE-770</a>,
+      <a href="https://cwe.mitre.org/data/definitions/799.html">CWE-799</a>,
+      <a href="https://cwe.mitre.org/data/definitions/693.html">CWE-693</a></li>
+  <li><a href="https://www.first.org/cvss/calculator/3.1">FIRST CVSS v3.1 Calculator</a></li>
+  <li><a href="https://developers.cloudflare.com/ssl/origin-configuration/authenticated-origin-pull/">Cloudflare Authenticated Origin Pulls</a></li>
+</ul>
+
+<footer>
+  <p><strong>Document VA-CTIP-2026-002 v1.0</strong> — redacted release of an authorized engagement,
+  published for educational and professional-portfolio purposes.</p>
+</footer>
+
+</div>
+</body>
+</html>
