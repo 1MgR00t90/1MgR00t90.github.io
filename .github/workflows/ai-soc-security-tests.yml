@@ -1,0 +1,25 @@
+name: AI SOC security boundaries
+
+on:
+  push:
+    paths:
+      - 'tools/ai-soc-agent/**'
+      - '.github/workflows/ai-soc-security-tests.yml'
+  pull_request:
+    paths:
+      - 'tools/ai-soc-agent/**'
+      - '.github/workflows/ai-soc-security-tests.yml'
+  workflow_dispatch:
+
+jobs:
+  offline-security-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate KQL argument boundaries without Azure credentials
+        run: python -m unittest discover -s tools/ai-soc-agent/tests -v
