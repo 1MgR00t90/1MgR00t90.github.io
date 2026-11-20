@@ -4,18 +4,18 @@ Security research and assessment reports shared publicly.
 
 ## Reports
 
-### Web Application Penetration Test - Network Management System (NMS)
+### Web Application Security Assessment - Network Management System (NMS)
 
 **[Read the full report](https://1mgr00t90.github.io/reports/nms-pentest-report/)**
 
-A manual, authorized web application penetration test of the firewall management module of an internally
+A manual, authorized web application security assessment of the firewall management module of an internally
 developed Network Management System. The assessment identified one High and three Medium severity findings,
 principally a stored cross-site scripting vulnerability in the firewall rule comment field.
 
 | | |
 |---|---|
 | **Reference** | PT-NMS-2025-001 |
-| **Type** | Manual grey-box web application penetration test |
+| **Type** | Manual grey-box web application security assessment |
 | **Findings** | 1 High, 3 Medium, 1 Low, 1 Informational |
 | **Key finding** | Stored XSS - CVSS v3.1 8.7 (High), CWE-79 |
 | **Standards** | OWASP WSTG v4.2, OWASP Top 10:2021, CWE, CAPEC, CVSS v3.1 |
@@ -42,8 +42,8 @@ broken rate limiting, and origin-server exposure behind a CDN.
 Testing was conducted with written authorization from the platform owner. The organization identity, domain, origin
 IP and all other identifying detail have been redacted for publication.
 
-### Regional API Proxy - SSRF Case Study
+### Regional API Proxy - SSRF Bug Bounty Report
 
 **[Read the sanitized report](https://1mgr00t90.github.io/reports/regional-api-ssrf/)**
 
-A sanitized case study documenting SSRF through regional API proxy endpoints, loopback and internal service reachability, and inconsistent destination validation compared with production. The report distinguishes recorded evidence from potential impact and includes remediation recommendations. Identifying details and infrastructure fingerprints have been omitted or generalized.
+A sanitized bug bounty report documenting SSRF through regional API proxy endpoints, loopback and internal service reachability, and inconsistent destination validation compared with production. The report distinguishes recorded evidence from potential impact and includes remediation recommendations. Identifying details and infrastructure fingerprints have been omitted or generalized.

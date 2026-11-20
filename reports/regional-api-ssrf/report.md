@@ -1,8 +1,8 @@
-# SSRF in Regional API Proxy Endpoints
+# SSRF in Regional API Proxy Endpoints — Bug Bounty Report
 
 ## Publication note
 
-This is a sanitized portfolio version of a finding documented during testing. Organization names, real domains, public IP addresses, exact timestamps, software versions, distinctive response strings, and secondary endpoint paths have been omitted or generalized. All example domains are placeholders. Response excerpts are normalized illustrations of the recorded behavior, not verbatim responses.
+This is a sanitized portfolio version of a finding documented during bug bounty testing. Organization names, real domains, public IP addresses, exact timestamps, software versions, distinctive response strings, and secondary endpoint paths have been omitted or generalized. All example domains are placeholders. Response excerpts are normalized illustrations of the recorded behavior, not verbatim responses.
 
 ## Summary
 

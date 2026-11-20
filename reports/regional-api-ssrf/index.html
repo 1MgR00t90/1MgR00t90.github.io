@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Regional API Proxy — SSRF Case Study</title>
+<title>Regional API Proxy — SSRF Bug Bounty Report</title>
 <meta name="description" content="Sanitized SSRF case study: internal service reachability and inconsistent destination validation.">
 <style>body{max-width:900px;margin:40px auto;padding:0 24px;color:#202830;background:#f4f5f6;font:16px/1.7 system-ui,sans-serif}a{color:#176b5f}code{font-family:Consolas,monospace}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;background:white;padding:28px;border:1px solid #dfe3e7;border-radius:6px} @media(prefers-color-scheme:dark){body{color:#e7eaec;background:#0e1113}pre{background:#161a1d;border-color:#262c31}a{color:#4fbfa8}}</style>
-</head><body><nav><a href="../../">← Portfolio</a> · <a href="report.md">Markdown report</a></nav><main><h1>SSRF in Regional API Proxy Endpoints</h1>
+</head><body><nav><a href="../../">← Portfolio</a> · <a href="report.md">Markdown report</a></nav><main><h1>SSRF in Regional API Proxy Endpoints — Bug Bounty Report</h1>
 <h2>Publication note</h2>
-<p>This is a sanitized portfolio version of a finding documented during testing. Organization names, real domains, public IP addresses, exact timestamps, software versions, distinctive response strings, and secondary endpoint paths have been omitted or generalized. All example domains are placeholders. Response excerpts are normalized illustrations of the recorded behavior, not verbatim responses.</p>
+<p>This is a sanitized portfolio version of a finding documented during bug bounty testing. Organization names, real domains, public IP addresses, exact timestamps, software versions, distinctive response strings, and secondary endpoint paths have been omitted or generalized. All example domains are placeholders. Response excerpts are normalized illustrations of the recorded behavior, not verbatim responses.</p>
 <h2>Summary</h2>
 <p>The source report documents Server-Side Request Forgery (SSRF) in the URL-fetching functionality of two regional API deployments. A production deployment rejected the same loopback target through a host allowlist, while the regional deployments allowed requests to loopback and an internal network service.</p>
 <p>The finding illustrates inconsistent security controls across deployments of the same functionality.</p>
