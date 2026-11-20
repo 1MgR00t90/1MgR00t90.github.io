@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Regional API Proxy — SSRF Case Study</title>
+<meta name="description" content="Sanitized SSRF case study: internal service reachability and inconsistent destination validation.">
+<style>body{max-width:900px;margin:40px auto;padding:0 24px;color:#202830;background:#f4f5f6;font:16px/1.7 system-ui,sans-serif}a{color:#176b5f}code{font-family:Consolas,monospace}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;background:white;padding:28px;border:1px solid #dfe3e7;border-radius:6px} @media(prefers-color-scheme:dark){body{color:#e7eaec;background:#0e1113}pre{background:#161a1d;border-color:#262c31}a{color:#4fbfa8}}</style>
+</head><body><nav><a href="../../">← Portfolio</a> · <a href="report.md">Markdown report</a></nav><main><h1>SSRF in Regional API Proxy Endpoints</h1>
+<h2>Publication note</h2>
+<p>This is a sanitized portfolio version of a finding documented during testing. Organization names, real domains, public IP addresses, exact timestamps, software versions, distinctive response strings, and secondary endpoint paths have been omitted or generalized. All example domains are placeholders. Response excerpts are normalized illustrations of the recorded behavior, not verbatim responses.</p>
+<h2>Summary</h2>
+<p>The source report documents Server-Side Request Forgery (SSRF) in the URL-fetching functionality of two regional API deployments. A production deployment rejected the same loopback target through a host allowlist, while the regional deployments allowed requests to loopback and an internal network service.</p>
+<p>The finding illustrates inconsistent security controls across deployments of the same functionality.</p>
+<h2>Vulnerability type</h2>
+<p>Server-Side Request Forgery (SSRF).</p>
+<h2>Affected functionality</h2>
+<p>A proxy endpoint accepted a user-controlled destination through a URL query parameter. For this publication, the endpoints are represented as:</p>
+<ul>
+<li><code>https://region-a-api.example.com/?url=</code></li>
+<li><code>https://region-b-api.example.com/?url=</code></li>
+</ul>
+<p>The production comparison endpoint is represented as <code>https://api.example.com/</code>.</p>
+<h2>Evidence and reproduction</h2>
+<p>The following examples use placeholder hosts and generalized service ports. They describe the original test sequence and are not instructions to test a live organization.</p>
+<h3>1. Loopback service access</h3>
+<p>A request to the regional proxy targeted a service bound to the server's loopback interface:</p>
+<pre><code>
+GET /?url=http://127.0.0.1:&lt;internal-http-port&gt;/ HTTP/1.1
+
+Host: region-a-api.example.com
+
+</code></pre>
+<p>The proxy returned an internal application's status response. Application-specific strings and timestamps have been omitted.</p>
+<h3>2. Internal service reachability</h3>
+<p>A second request targeted an internal network service. The proxy returned a protocol-parsing error containing an SSH banner.</p>
+<p>This supports reachability of the service from the proxy. It does not demonstrate SSH authentication, command execution, or compromise of that service. The internal address, exact error text, and software version are omitted.</p>
+<h3>3. External request confirmation</h3>
+<p>A request to a controlled external HTTP endpoint returned the server's outbound source address. That address and the external test endpoint are omitted.</p>
+<h3>4. Deployment comparison</h3>
+<p>The equivalent loopback request through the production endpoint returned a host-allowlist rejection:</p>
+<pre><code>
+GET /?url=http://127.0.0.1:&lt;internal-http-port&gt;/ HTTP/1.1
+
+Host: api.example.com
+
+</code></pre>
+<p>The regional and production responses demonstrated a difference in destination validation.</p>
+<h2>Impact and evidence limits</h2>
+<p><strong>Demonstrated in the source report:</strong></p>
+<ul>
+<li>Server-side requests to a loopback HTTP service.</li>
+<li>Reachability of an internal service, evidenced by a protocol banner.</li>
+<li>External URL fetching and disclosure of the server's outbound source address.</li>
+<li>Inconsistent destination restrictions across regional and production deployments.</li>
+</ul>
+<p><strong>Potential consequences requiring additional validation:</strong></p>
+<ul>
+<li>Internal service enumeration through response differences.</li>
+<li>Access to sensitive internal applications or data if reachable services expose them.</li>
+<li>Cloud metadata exposure if the request primitive and metadata protections permit it.</li>
+</ul>
+<p>Database access, credential theft, remote code execution, and internal service compromise were not established by the evidence included in the source report. The source describes metadata protections as limiting metadata access; the supplied evidence does not independently verify their configuration.</p>
+<h2>Secondary observations</h2>
+<p>The source also records permissive CORS behavior and an unauthenticated diagnostic response on regional deployments. These observations lack complete reproduction evidence in the supplied report and are not presented here as independently validated findings.</p>
+<p>A credentialed CORS exploit would require validation of browser behavior, cookie restrictions, and access to a sensitive response. Public API documentation alone does not establish a vulnerability. Exact diagnostic paths are omitted because the source uses inconsistent names.</p>
+<h2>Remediation recommendations</h2>
+<ol>
+<li>Apply a consistent, explicit destination allowlist across all deployments of the proxy.</li>
+<li>Validate destination schemes, hostnames, resolved addresses, and ports. Restrict the proxy to the destinations required for its business purpose.</li>
+<li>Reject loopback, private, link-local, and other prohibited destinations for both IPv4 and IPv6, including alternate address representations.</li>
+<li>Revalidate destinations after DNS resolution and on every redirect, or disable redirects. Account for DNS rebinding.</li>
+<li>Use network egress controls to prevent the proxy from reaching internal management services and metadata endpoints unless explicitly required.</li>
+<li>Return generic proxy errors rather than internal response details or service banners.</li>
+<li>Require appropriate authentication and authorization for diagnostic functions, and restrict credentialed CORS to explicitly trusted origins.</li>
+<li>Add regression checks across every deployment for allowed destinations, prohibited destinations, redirects, DNS changes, and equivalent IPv6 targets.</li>
+</ol>
+<h2>Retest status</h2>
+<p>Remediation and retest status are not provided in the supplied report.</p></main></body></html>

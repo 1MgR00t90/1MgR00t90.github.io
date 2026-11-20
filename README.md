@@ -41,3 +41,9 @@ broken rate limiting, and origin-server exposure behind a CDN.
 
 Testing was conducted with written authorization from the platform owner. The organization identity, domain, origin
 IP and all other identifying detail have been redacted for publication.
+
+### Regional API Proxy - SSRF Case Study
+
+**[Read the sanitized report](https://1mgr00t90.github.io/reports/regional-api-ssrf/)**
+
+A sanitized case study documenting SSRF through regional API proxy endpoints, loopback and internal service reachability, and inconsistent destination validation compared with production. The report distinguishes recorded evidence from potential impact and includes remediation recommendations. Identifying details and infrastructure fingerprints have been omitted or generalized.
