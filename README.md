@@ -12,11 +12,7 @@ A collection of selected security assessment reports, bug bounty research, and e
 
 **SSRF · Web/API · Bug bounty**
 
-A redacted report documenting server-side request forgery through the root proxy's `?url=` parameter on regional API endpoints. The original evidence shows a response from a localhost application, an internal SSH banner exposed through a proxy error, and an external service returning the server's outbound IP. A comparison request to production is rejected with `Host not allowed`.
-
-The report also records CORS origin reflection with credentials and an unauthenticated regional information endpoint. Potential access to databases or other backend services was not demonstrated in the included evidence. AWS credential theft was not demonstrated; the report states that IMDSv2 enforcement mitigated metadata access.
-
-Recommended remediation includes consistent host allowlisting across regional and production instances, blocking private and link-local destinations, requiring authentication for the regional information endpoint, and restricting CORS to trusted origins.
+A redacted report documenting server-side request forgery in regional API proxy endpoints. Includes request/response evidence for loopback, internal network, and external destinations, plus a comparison with production filtering behavior. Explains confirmed observations separately from potential impact and remediation.
 
 ### [Network Management System — Security Assessment](https://1mgr00t90.github.io/reports/nms-pentest-report/)
 
