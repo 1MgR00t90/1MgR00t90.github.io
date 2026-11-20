@@ -104,6 +104,8 @@
     color: var(--ink-soft);
   }
 
+  .item p.vulns { color: var(--accent); font-size: 14px; margin-bottom: 10px; }
+
   .facts {
     display: flex; flex-wrap: wrap; gap: 6px 8px;
     font-family: var(--mono); font-size: 11.5px;
@@ -177,6 +179,7 @@
     <h3>Regional API Proxy — SSRF Case Study</h3>
     <span class="ref">Sanitized report</span>
   </div>
+  <p class="vulns"><strong>SSRF</strong></p>
   <p>Server-side request forgery exposed loopback and internal service reachability through regional API proxies.
   A comparison with production highlighted inconsistent destination validation across deployments.</p>
   <div class="facts">
@@ -193,6 +196,7 @@
     <h3>Network Management System — XSS Penetration Test</h3>
     <span class="ref">PT-NMS-2025-001</span>
   </div>
+  <p class="vulns"><strong>Stored &amp; Reflected XSS</strong></p>
   <p>Manual grey-box web application test of the firewall management module of an internally developed NMS.
   Stored and reflected cross-site scripting traced to a single unsafe rendering pattern, with root-cause
   analysis across three injection contexts.</p>
@@ -210,6 +214,7 @@
     <h3>Cryptocurrency Threat-Intelligence Platform — Security Assessment</h3>
     <span class="ref">VA-CTIP-2026-002</span>
   </div>
+  <p class="vulns"><strong>Broken Access Control · Rate-Limit Bypass · CDN Origin Exposure</strong></p>
   <p>Manual black-box assessment of a public-facing platform and its API. Broken access control on a premium
   endpoint, a rate limit enforced only at the response layer, and an origin server reachable around its CDN.</p>
   <div class="facts">
