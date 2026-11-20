@@ -76,10 +76,11 @@ PATH_PATTERN = re.compile(r"^/[A-Za-z0-9._/~\-]{0,255}$")
 # an IP must parse as an IP; a timestamp is parsed to a datetime and re-serialised by us
 ```
 
-Anything that fails is **refused**, not escaped and hoped for. Escaping is the approach that
-eventually fails; refusing is the one that doesn't. The test suite fires KQL injection at every
-tool — `x' or 1==1 //`, `1.1.1.1' | union AppEvents //`, `'; SecurityAlert | take 100 //` — and
-asserts every one is rejected before a query is built.
+Anything that fails validation is **refused** before query execution, rather than relying
+on KQL escaping. The checked-in [offline security tests](tests/test_security_controls.py)
+exercise KQL-injection-style inputs against all seven investigation tool routes (including
+multiple arguments on `get_azure_activity`) and assert that rejected inputs never call
+the query executor. The tests use mocks and do not contact Azure.
 
 This is not theoretical. In production the model once tried to look up an "IP address" it had
 assembled from digits in a workflow run id in the alert footer. `ipaddress.ip_address()` refused
@@ -93,11 +94,15 @@ Data access uses the container's **system-assigned Managed Identity** holding
 container that can write. The Azure OpenAI key is a Container Apps **secret reference**, never a
 plain environment value.
 
-### 4. Untrusted input is treated as untrusted
+### 4. Prompt-injection exposure is constrained, not eliminated
 
 Alert text originates from logs and chat, which means an attacker can influence it. It is fenced
 in `<alert>` tags, labelled as data, and the system prompt instructs the model to *report*
-embedded instructions as a possible prompt-injection attempt rather than obey them.
+embedded instructions as a possible prompt-injection attempt rather than obey them. These are
+instructional mitigations, **not a guarantee that the model will resist malicious instructions**.
+The stronger boundaries are architectural: the model is restricted to named tools, tool arguments
+are validated, and the Azure identity is read-only. An attacker might still influence the analysis
+or tool choices; end-to-end adversarial prompt-injection evaluations have not been published.
 
 ### 5. Model output is not trusted either
 
@@ -124,6 +129,22 @@ is told the result was shortened, because a silently truncated result reads as a
 
 Every tool is a read. The agent proposes; a human decides. Containment actions are deliberately
 out of scope until there is a human-approval step.
+
+---
+
+## Security regression tests
+
+Run the dependency-free tests locally with Python 3.11+:
+
+```bash
+python -m unittest discover -s tools/ai-soc-agent/tests -v
+```
+
+[GitHub Actions](../../.github/workflows/ai-soc-security-tests.yml) is configured to run these tests
+on changes to the agent. Tests mock `_run` to check argument rejection, fixed-query construction,
+and time-window bounds. **Scope limit:** this tests the code-level KQL boundary, not end-to-end
+model behavior, deployed authentication controls, or immunity to prompt injection. Live Azure
+integration and adversarial LLM evaluation require separate testing.
 
 ---
 
