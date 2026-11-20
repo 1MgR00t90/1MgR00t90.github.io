@@ -3,7 +3,7 @@
 <title>Regional API Proxy — SSRF Bug Bounty Report</title>
 <meta name="description" content="Redacted SSRF bug bounty report with request examples, response evidence, impact, and remediation.">
 <style>:root{--ink:#192d33;--muted:#4c6469;--green:#126651;--rule:#ccdad5;--mono:Consolas,monospace}*{box-sizing:border-box}body{margin:0;background:#f5f7f3;color:var(--ink);font:16px/1.65 system-ui,sans-serif}a{color:var(--green);text-underline-offset:4px}nav,header>div,.layout{max-width:1160px;margin:auto;padding-inline:clamp(20px,5vw,70px)}nav{display:flex;justify-content:space-between;padding-block:14px;font-size:14px}header{background:linear-gradient(110deg,#0c242a 8%,#16473d 90%);color:#fff;border-bottom:6px solid #9de4b4}header>div{padding-block:clamp(40px,6vw,78px)}header p,aside strong,figcaption{font:700 12px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase}header p{color:#a8e7bf;margin:0 0 18px}h1{font:600 clamp(34px,5vw,64px)/1.06 Georgia,serif;letter-spacing:-.035em;max-width:24ch;margin:0;text-wrap:balance}.layout{display:grid;grid-template-columns:190px minmax(0,1fr);gap:clamp(24px,5vw,70px);padding-block:42px}aside{position:sticky;top:24px;align-self:start;border-left:2px solid var(--rule);padding-left:16px}aside strong{color:var(--muted)}aside a{display:block;text-decoration:none;padding:5px 0;font-size:14px}aside a:hover{text-decoration:underline}details{background:#e7efe9;padding:12px 18px;border-radius:5px;color:var(--muted)}summary{cursor:pointer;font-weight:650}section{padding:20px 0;border-bottom:1px solid var(--rule);scroll-margin-top:18px}h2{font:600 30px/1.15 Georgia,serif;margin:12px 0 18px}ul,ol{padding-left:1.6rem}code{font: .9em/1.65 var(--mono);overflow-wrap:anywhere}p code,li code{background:#e4ece7;border-radius:3px;padding:2px 4px}figure{margin:10px 0 24px;border-radius:8px;overflow:hidden;border:1px solid #294447;background:#122a30;color:#e7f3ed}figcaption{background:#203e43;color:#ade2cb;padding:8px 16px}pre{margin:0;padding:16px;white-space:pre-wrap;overflow-wrap:anywhere}.response{background:#fff;color:#1c3930;border-color:#bdcfc4}.response figcaption{background:#deece1;color:#24553c}#summary p{font-size:18px}a:focus-visible,summary:focus-visible{outline:3px solid #3983b1}@media(max-width:740px){.layout{display:block;padding-block:18px}aside{position:static;margin-bottom:20px}aside a{display:inline-block;margin-right:14px}aside strong{display:block}}@media(prefers-color-scheme:dark){:root{--ink:#e1ece4;--muted:#aec3b9;--green:#9eddbd;--rule:#3b514a}body{background:#13201e}details,p code,li code{background:#243631}.response{background:#20362e;color:#e2ede5}.response figcaption{background:#334c40;color:#d2ebdb}}.exchange{margin:1.6rem 0;padding:0 0 .6rem 1rem;border-left:3px solid var(--rule)}.exchange h3{font-size:1.05rem}.exchange figure{margin:8px 0}</style></head><body><nav><a href="../../">← Portfolio</a><a href="report.md">Markdown report</a></nav><header><div><p>Bug Bounty Report</p><h1>SSRF on Regional API Endpoints Allows Internal Network Access</h1></div></header><div class="layout"><aside aria-label="Report contents"><strong>Contents</strong><a href="#summary">Summary</a><a href="#vulnerability-type">Vulnerability Type</a><a href="#affected-endpoints">Affected Endpoints</a><a href="#description">Description</a><a href="#steps-to-reproduce">Steps to Reproduce</a><a href="#impact">Impact</a><a href="#additional-findings">Additional Findings</a><a href="#recommended-fix">Recommended Fix</a></aside><main><details><summary>Publication note</summary><p>Target domains, internal addresses and service ports, diagnostic paths, application identity, timestamps, error prefixes, and software versions have been replaced with placeholders or representative values. The request structure and response evidence are preserved. Loopback and private addresses below are illustrative; they do not disclose the target network.</p></details><section id="summary"><h2>Summary</h2>
-<p>The regional API endpoints (<code>region-a-api.example.com</code>, <code>region-b-api.example.com</code>) are vulnerable to Server-Side Request Forgery (SSRF) via the root proxy parameter (<code>?url=</code>). Unlike production (<code>api.example.com</code>), the regional instances do not enforce a host allowlist, enabling access to localhost and internal Docker network services.</p>
+<p>The regional API endpoints (<code>region-a-api.example.com</code>, <code>region-b-api.example.com</code>) are vulnerable to Server-Side Request Forgery (SSRF) via the root proxy parameter (<code>?url=</code>). Unlike the production comparison, the regional endpoint returned responses associated with loopback HTTP and a private-address SSH service. This establishes inconsistent destination filtering, but not the filtering implementation or the private service's hosting platform.</p>
 </section>
 <section id="vulnerability-type"><h2>Vulnerability Type</h2>
 <p>Server-Side Request Forgery (SSRF)</p>
@@ -16,14 +16,14 @@
 </section>
 <section id="description"><h2>Description</h2>
 <p>The regional API endpoints (<code>region-a-api.example.com</code> and <code>region-b-api.example.com</code>) contain an SSRF vulnerability in proxy functionality at the root endpoint.</p>
-<p>Production (<code>api.example.com</code>) applies a host allowlist and blocks internal targets, but regional instances allow arbitrary URL fetching, including internal and localhost addresses.</p>
+<p>Production (<code>api.example.com</code>) returned <code>Host not allowed</code> for the recorded loopback request. Regional requests reached the demonstrated loopback HTTP service, private-address SSH service, and external HTTP endpoint. The available exchanges do not establish a complete allowlist or blocklist policy.</p>
 <p>This allows an attacker to:</p>
 <ol>
 <li>Access localhost services (<code>127.0.0.1:8080</code>)</li>
-<li>Access Docker network services (<code>10.0.0.10:22</code>)</li>
-<li>Enumerate internal services and ports</li>
+<li>Reach an SSH-speaking service at a private address (<code>10.0.0.10:22</code> is illustrative, not the original address/port)</li>
+<li>Potentially enumerate additional internal services and ports (not demonstrated by the included exchanges)</li>
 <li>Potentially access databases, caches, or admin panels on the internal network</li>
-<li>Attempt AWS metadata access via IMDS (currently mitigated by IMDSv2 enforcement; IMDSv1 would risk credential exposure)</li>
+<li>Potentially probe metadata services if the network path allows it (metadata access and IMDS configuration are not verified here)</li>
 </ol>
 </section>
 <section id="steps-to-reproduce"><h2>Steps to Reproduce</h2>
@@ -34,7 +34,7 @@ curl &quot;https://region-a-api.example.com/?url=http://127.0.0.1:8080/&quot;
 {&quot;message&quot;:&quot;[REDACTED-APP] is active!&quot;,&quot;js&quot;:&quot;[REDACTED-TIMESTAMP]&quot;}
 
 </code></pre></figure></article>
-<article class="exchange"><h3>Step 2. Send a request to the region A endpoint with the internal Docker bridge URL</h3><figure class="request"><figcaption>Request</figcaption><pre><code>
+<article class="exchange"><h3>Step 2. Send a request to the region A endpoint with a private-address SSH service URL (representative address and port)</h3><figure class="request"><figcaption>Request</figcaption><pre><code>
    https://region-a-api.example.com/?url=http://10.0.0.10:22/
 
 </code></pre></figure><figure class="response"><figcaption>Response</figcaption><pre><code>
@@ -68,22 +68,22 @@ curl &quot;https://api.example.com/?url=http://127.0.0.1:8080/&quot;
 </section>
 <section id="impact"><h2>Impact</h2>
 <ul>
-<li>Access to internal services not exposed to the internet</li>
-<li>Potential access to databases, Redis, or other backend services on Docker network</li>
-<li>Server-side port scanning of internal infrastructure</li>
-<li>Potential AWS credential theft if IMDSv1 were enabled</li>
-<li>Can be chained with CORS misconfiguration (<code>Access-Control-Allow-Origin</code> reflects arbitrary origins with <code>Access-Control-Allow-Credentials: true</code>) to perform SSRF via a victim browser session</li>
+<li>Demonstrated reachability of a loopback HTTP service and an SSH-speaking service on a private address</li>
+<li>Potential access to other internal applications or data if reachable and exposed (not demonstrated)</li>
+<li>Potential server-side service and port enumeration through response differences (not separately demonstrated)</li>
+<li>Potential metadata exposure under misconfigured conditions; no credential theft or metadata access was demonstrated</li>
+<li>Any cross-origin, credentialed browser attack would require separate validation; it is not established by the included SSRF exchanges</li>
 </ul>
 </section>
 <section id="additional-findings"><h2>Additional Findings</h2>
-<p>Additional issues discovered during testing:</p>
+<p>Additional observations described in the source report; complete request/response evidence for these items is not reproduced below:</p>
 <ol>
 <li>CORS misconfiguration (all endpoints)</li>
 </ol>
 <ul>
 <li><code>Access-Control-Allow-Origin</code> reflects arbitrary origins</li>
 <li><code>Access-Control-Allow-Credentials: true</code></li>
-<li>Enables cross-origin credentialed requests from untrusted websites</li>
+<li>Actual credentialed browser exploitation would require further validation of cookies, authentication, and browser behavior</li>
 </ul>
 <ol>
 <li>Unauthenticated <code>/diagnostics</code> endpoint (region A/B only)</li>
@@ -93,7 +93,7 @@ curl &quot;https://api.example.com/?url=http://127.0.0.1:8080/&quot;
 <li>Production (<code>api.example.com</code>) requires a token; regional instances do not</li>
 </ul>
 <ol>
-<li>Exposed OpenAPI documentation</li>
+<li>Publicly accessible OpenAPI documentation (not inherently a vulnerability)</li>
 </ol>
 <ul>
 <li><code>/docs</code> and <code>/openapi.json</code> are publicly accessible on all endpoints</li>
@@ -101,7 +101,7 @@ curl &quot;https://api.example.com/?url=http://127.0.0.1:8080/&quot;
 </section>
 <section id="recommended-fix"><h2>Recommended Fix</h2>
 <ol>
-<li>Apply the same host allowlist used by <code>api.example.com</code> to all regional instances</li>
+<li>Apply consistent, explicit destination restrictions across regional and production deployments; the production error alone does not reveal the implementation</li>
 <li>Block requests to private/link-local/localhost ranges:</li>
 </ol>
 <ul>
