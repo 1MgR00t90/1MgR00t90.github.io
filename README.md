@@ -1,49 +1,47 @@
-# Labs, Code, & Reports
+# Labs, Code & Reports
 
-Security research and assessment reports shared publicly.
+**Offensive security portfolio — web applications, APIs, security assessments, and detection engineering.**
 
-## Reports
+[View the portfolio](https://1mgr00t90.github.io/)
 
-### Web Application Security Assessment - Network Management System (NMS)
+A collection of selected security assessment reports, bug bounty research, and engineering work. The focus is manual testing, reproducible technical evidence, practical remediation, and the security controls that follow an assessment.
 
-**[Read the full report](https://1mgr00t90.github.io/reports/nms-pentest-report/)**
+## Security Reports
 
-A manual, authorized web application security assessment of the firewall management module of an internally
-developed Network Management System. The assessment identified one High and three Medium severity findings,
-principally a stored cross-site scripting vulnerability in the firewall rule comment field.
+### [Regional API Proxy — SSRF Bug Bounty Report](https://1mgr00t90.github.io/reports/regional-api-ssrf/)
 
-| | |
-|---|---|
-| **Reference** | PT-NMS-2025-001 |
-| **Type** | Manual grey-box web application security assessment |
-| **Findings** | 1 High, 3 Medium, 1 Low, 1 Informational |
-| **Key finding** | Stored XSS - CVSS v3.1 8.7 (High), CWE-79 |
-| **Standards** | OWASP WSTG v4.2, OWASP Top 10:2021, CWE, CAPEC, CVSS v3.1 |
+**SSRF · Web/API · Bug bounty**
 
-Testing was conducted with written authorization from the system owner against a non-production development
-instance. All identifying detail has been redacted for publication.
+A redacted report documenting server-side request forgery in regional API proxy endpoints. Includes request/response evidence for loopback, internal network, and external destinations, plus a comparison with production filtering behavior. Explains confirmed observations separately from potential impact and remediation.
 
-### Web Application Security Assessment - Cryptocurrency Threat-Intelligence Platform
+### [Network Management System — Security Assessment](https://1mgr00t90.github.io/reports/nms-pentest-report/)
 
-**[Read the full report](https://1mgr00t90.github.io/reports/cryptosite-vuln-assesment/)**
+**Stored and reflected XSS · HTML injection · Client-side security**
 
-A manual, authorized black-box security assessment of a public-facing cryptocurrency threat-intelligence platform
-and its API. The assessment identified two High and one Medium severity findings, spanning broken access control,
-broken rate limiting, and origin-server exposure behind a CDN.
+A manual grey-box assessment of an internally developed network management interface. The report covers a stored XSS finding in firewall rule comments, related injection paths, outdated JavaScript dependencies, browser hardening, and remediation priorities.
 
-| | |
-|---|---|
-| **Reference** | VA-CTIP-2026-002 |
-| **Type** | Manual black-box web application and API security assessment |
-| **Findings** | 2 High, 1 Medium |
-| **Key findings** | Unauthenticated access to paid-tier API data; password-reset email flooding despite rate limit; Cloudflare origin bypass |
-| **Standards** | OWASP WSTG v4.2, OWASP Top 10:2021, OWASP API Top 10:2023, CWE, CVSS v3.1 |
+### [Cryptocurrency Threat-Intelligence Platform — Security Assessment](https://1mgr00t90.github.io/reports/cryptosite-vuln-assesment/)
 
-Testing was conducted with written authorization from the platform owner. The organization identity, domain, origin
-IP and all other identifying detail have been redacted for publication.
+**Broken access control · Rate limiting · Origin exposure**
 
-### Regional API Proxy - SSRF Bug Bounty Report
+A manual black-box web and API assessment covering unauthenticated access to paid-tier data, password-reset rate-limit weaknesses, and exposure of a CDN-protected origin. Includes risk analysis, findings, and recommended corrective actions.
 
-**[Read the sanitized report](https://1mgr00t90.github.io/reports/regional-api-ssrf/)**
+## Engineering
 
-A sanitized bug bounty report documenting SSRF through regional API proxy endpoints, loopback and internal service reachability, and inconsistent destination validation compared with production. The report distinguishes recorded evidence from potential impact and includes remediation recommendations. Identifying details and infrastructure fingerprints have been omitted or generalized.
+### [AI-Assisted SOC Triage Agent](tools/ai-soc-agent/)
+
+A Slack-invoked investigation agent that uses defined read-only tools to retrieve and correlate Microsoft Sentinel and Azure telemetry. Designed to distinguish observed evidence from analysis and leave investigation and response decisions with the analyst.
+
+[Explore the code and technical README](tools/ai-soc-agent/README.md)
+
+## Articles
+
+### [From Pentesting to Security Visibility: Building a SIEM on a Nonprofit Budget](https://1mgr00t90.github.io/articles/from-pentester-to-security-lead/)
+
+An anonymized account of moving from web and API penetration testing into remediation validation, vulnerability management, Microsoft Sentinel detection engineering, incident triage, and AI-assisted security operations at a music education nonprofit.
+
+## Approach
+
+My assessment work emphasizes clear scope and authorization, hands-on validation, repeatable proof of impact, risk-based remediation, and retesting. The reports are written to be useful to both technical teams and stakeholders making remediation decisions.
+
+**Publication note:** Client and infrastructure identifiers are redacted or generalized in public reports. Representative values are identified where used; consult the individual reports for their evidence and limitations.
